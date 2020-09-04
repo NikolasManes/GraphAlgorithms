@@ -59,4 +59,26 @@ public class Graph {
         }
         return false;
     }
+
+    public Node getSingleNode(int id) throws NodeNotInGraphException {
+        for (Node node : mNodes){
+            if(node.getId() == id) {
+                return node;
+            }
+        }
+        throw new NodeNotInGraphException("There is not a node with id " + id + " in the graph!");
+    }
+
+    public void printGraph(){
+        System.out.println("No of Nodes: " + mNodes.size());
+        for (Path path: mPaths){
+            path.printPath();
+        }
+    }
+}
+
+class NodeNotInGraphException extends Exception{
+    public NodeNotInGraphException(String message){
+        super(message);
+    }
 }

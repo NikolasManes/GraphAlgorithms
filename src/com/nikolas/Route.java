@@ -18,7 +18,6 @@ public class Route{
         return mStartPoint;
     }
 
-
     public Node getEndPoint() {
         return mEndPoint;
     }
@@ -27,9 +26,14 @@ public class Route{
         return mPaths;
     }
 
-    public void addPath(Path path) {
-        this.mPaths.add(path);
-        this.calcTotalWeight();
+    public void addPath(Path path) throws PathCannotConnectToRouteException {
+        if (this.mEndPoint.getId() == path.getStart().getId()){
+            this.mPaths.add(path);
+            this.mEndPoint = path.getEnd();
+            this.calcTotalWeight();
+        } else {
+            throw new PathCannotConnectToRouteException("Route and Path cannot be connected!");
+        }
     }
 
     public void printRoute(){
@@ -59,5 +63,11 @@ public class Route{
 
     public int getTotalWeight() {
         return mTotalWeight;
+    }
+}
+
+class PathCannotConnectToRouteException extends Exception{
+    public PathCannotConnectToRouteException(String message){
+        super(message);
     }
 }

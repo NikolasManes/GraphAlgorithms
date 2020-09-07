@@ -69,7 +69,9 @@ public class Main {
 
     private static void runAlgorithm(Graph graph) {
         String choiceText;
-        int choice = 0;
+        int choice = -1;
+        int startNodeID = -1;
+        int endNodeID = -1;
         System.out.println("Algorithms to run: \n");
         System.out.println("\t1-Breadth First Search");
         System.out.println("\t2-Depth First Search");
@@ -79,7 +81,7 @@ public class Main {
 
         choiceText = scanner.nextLine();
         // Get User Choice
-        while (choice == 0){
+        while (choice == -1){
             try {
                 choice = parseInt(choiceText);
             } catch (NumberFormatException e) {
@@ -89,10 +91,42 @@ public class Main {
         }
         switch (choice){
             case 1:
-                runBFS(graph);
+                while (startNodeID == -1){
+                    System.out.println("Enter the start node: ");
+                    try {
+                        startNodeID = parseInt(scanner.nextLine());
+                    } catch (NumberFormatException e) {
+                        System.out.println("Not valid... Enter an integer from 1 to " + graph.getNodeNumber() + ".");
+                    }
+                }
+                while (endNodeID == -1){
+                    System.out.println("Enter the end node: ");
+                    try {
+                        endNodeID = parseInt(scanner.nextLine());
+                    } catch (NumberFormatException e) {
+                        System.out.println("Not valid... Enter an integer from 1 to " + graph.getNodeNumber() + ".");
+                    }
+                }
+                runBFS(graph, startNodeID, endNodeID);
                 break;
             case 2:
-                runDFS(graph);
+                while (startNodeID == -1){
+                    System.out.println("Enter the start node: ");
+                    try {
+                        startNodeID = parseInt(scanner.nextLine());
+                    } catch (NumberFormatException e) {
+                        System.out.println("Not valid... Enter an integer from 1 to " + graph.getNodeNumber() + ".");
+                    }
+                }
+                while (endNodeID == -1){
+                    System.out.println("Enter the end node: ");
+                    try {
+                        endNodeID = parseInt(scanner.nextLine());
+                    } catch (NumberFormatException e) {
+                        System.out.println("Not valid... Enter an integer from 1 to " + graph.getNodeNumber() + ".");
+                    }
+                }
+                runDFS(graph, startNodeID, endNodeID);
                 break;
             case 3:
                 runPrim(graph);
@@ -103,11 +137,41 @@ public class Main {
         }
     }
 
-    public static void runBFS(Graph graph){
-        System.out.println("Not implemented yet!");
+    public static void runBFS(Graph graph, int startID, int endID){
+        List<Node> frontier = new ArrayList<>();
+        List<Node> exploredNodes = new ArrayList<>();
+        List<Path> routePaths = new ArrayList<>();
+        try {
+            Route route = new Route(graph.getSingleNode(startID), graph.getSingleNode(endID), routePaths);
+        } catch (NodeNotInGraphException e) {
+            e.printStackTrace();
+        }
+        try {
+            frontier.add(graph.getSingleNode(startID));
+        } catch (NodeNotInGraphException e) {
+            System.out.println(e.getMessage());
+        }
+        while (!frontier.isEmpty())
+        for (Node node: frontier){
+            Node toCheck = node;
+            frontier.remove(node);
+            if (toCheck.getId() == endID){
+                System.out.println("Route found!");
+            }
+            System.out.println(node.getId());
+            exploredNodes.add(toCheck);
+            for (Path path: graph.getPaths()){
+                if (path.getStart().getId() == toCheck.getId()){
+                    if (frontier.contains(path.getEnd()) || exploredNodes.contains(path.getEnd())){
+                        continue;
+                    }
+                    frontier.add(path.getEnd());
+                }
+            }
+        }
     }
 
-    public static void runDFS(Graph graph){
+    public static void runDFS(Graph graph, int startID, int endID){
         System.out.println("Not implemented yet!");
     }
 
@@ -115,7 +179,7 @@ public class Main {
         System.out.println("Not implemented yet!");
     }
 
-    public static void runDijkstra(Graph graph) {
+    public static List<Route> runDijkstra(Graph graph) {
         // Declare a list to store the routes
         List<Route> routes = new ArrayList<>();
         // Now add all the others the weight is MAX
@@ -159,10 +223,14 @@ public class Main {
                             if(route.getTotalWeight() > shortestRoute.getTotalWeight() + path.getWeight()){
                                 // Create a dummy route to store the route
                                 Route dummyRoute = new Route(shortestRoute.getStartPoint(), path.getEnd(), new ArrayList<>());
-                                for(Path p: shortestRoute.getPaths()){
-                                    dummyRoute.addPath(p);
+                                try {
+                                    for(Path p: shortestRoute.getPaths()){
+                                        dummyRoute.addPath(p);
+                                    }
+                                    dummyRoute.addPath(path);
+                                } catch (PathCannotConnectToRouteException e) {
+                                    System.out.println(e.getMessage());
                                 }
-                                dummyRoute.addPath(path);
                                 dummyRoute.calcTotalWeight();
                                 routes.set(routes.indexOf(route), dummyRoute);
                                 System.out.println("<<<New Route>>>");
@@ -177,6 +245,7 @@ public class Main {
         for(Route r : bestRoutes){
             r.printRoute();
         }
+        return bestRoutes;
     }
 
     public static void intro(){

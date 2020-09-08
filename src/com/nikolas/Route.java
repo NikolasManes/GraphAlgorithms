@@ -26,7 +26,7 @@ public class Route{
         return mPaths;
     }
 
-    public void addPath(Path path) throws PathCannotConnectToRouteException {
+    public void addPathToRoute(Path path) throws PathCannotConnectToRouteException {
         if (this.mEndPoint.getId() == path.getStart().getId()){
             this.mPaths.add(path);
             this.mEndPoint = path.getEnd();

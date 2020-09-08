@@ -27,7 +27,7 @@ public class Graph {
         return mPaths.size();
     }
 
-    public void addPath(Path path) {
+    public void addPathToGraph(Path path) {
         mPaths.add(path);
     }
 

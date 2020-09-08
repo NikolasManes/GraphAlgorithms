@@ -3,6 +3,7 @@ package com.nikolas;
 import java.util.*;
 
 import static java.lang.Integer.parseInt;
+import static java.lang.Integer.toBinaryString;
 
 public class Main {
 
@@ -49,7 +50,7 @@ public class Main {
                 Node end = graph.getSingleNode(parseInt(pathParams[1]));
                 int weight = parseInt(pathParams[2]);
                 Path path = new Path(start, end, weight);
-                graph.addPath(path);
+                graph.addPathToGraph(path);
             } catch (NodeNotInGraphException e) {
                 System.out.println(e.getMessage());
                 pathEntry = scanner.nextLine();
@@ -137,12 +138,14 @@ public class Main {
         }
     }
 
-    public static void runBFS(Graph graph, int startID, int endID){
+    public static Route runBFS(Graph graph, int startID, int endID){
         List<Node> frontier = new ArrayList<>();
         List<Node> exploredNodes = new ArrayList<>();
-        List<Path> routePaths = new ArrayList<>();
+        List<Route> routes = new ArrayList<>();
+        List<Route> routesToAdd = new ArrayList<>();
         try {
-            Route route = new Route(graph.getSingleNode(startID), graph.getSingleNode(endID), routePaths);
+            Route startRoute = new Route(graph.getSingleNode(startID), graph.getSingleNode(startID), new ArrayList<>());
+            routes.add(startRoute);
         } catch (NodeNotInGraphException e) {
             e.printStackTrace();
         }
@@ -151,28 +154,72 @@ public class Main {
         } catch (NodeNotInGraphException e) {
             System.out.println(e.getMessage());
         }
-        while (!frontier.isEmpty())
-        for (Node node: frontier){
-            Node toCheck = node;
-            frontier.remove(node);
-            if (toCheck.getId() == endID){
-                System.out.println("Route found!");
-            }
-            System.out.println(node.getId());
-            exploredNodes.add(toCheck);
-            for (Path path: graph.getPaths()){
-                if (path.getStart().getId() == toCheck.getId()){
-                    if (frontier.contains(path.getEnd()) || exploredNodes.contains(path.getEnd())){
-                        continue;
+        while (!frontier.isEmpty()) {
+            List<Node> dummyFrontierList = new ArrayList<>(frontier);
+            for (Node node : dummyFrontierList) {
+                Node toCheck = node;
+                frontier.remove(node);
+                if (toCheck.getId() == endID) {
+                    System.out.println("Route found!");
+                    for (Route route : routes) {
+                        if (route.getEndPoint().getId() == endID) {
+                            route.printRoute();
+                            return route;
+                        }
                     }
-                    frontier.add(path.getEnd());
+                }
+                System.out.println(node.getId());
+                exploredNodes.add(toCheck);
+                for (Path path : graph.getPaths()) {
+                    if (path.getStart().getId() == toCheck.getId()) {
+                        if (frontier.contains(path.getEnd()) || exploredNodes.contains(path.getEnd())) {
+                            continue;
+                        }
+                        frontier.add(path.getEnd());
+                        for (Route r : routes) {
+                            if (r.getEndPoint().getId() == toCheck.getId()) {
+                                Route routetemp = new Route(r.getStartPoint(), r.getEndPoint(), new ArrayList<>(r.getPaths()));
+                                try {
+                                    routetemp.addPathToRoute(path);
+                                    routetemp.printRoute();
+                                } catch (PathCannotConnectToRouteException e) {
+                                    e.printStackTrace();
+                                }
+                                routesToAdd.add(routetemp);
+                            }
+                        }
+                        routes.addAll(routesToAdd);
+                        routesToAdd.clear();
+                    }
                 }
             }
         }
+        return null;
     }
 
-    public static void runDFS(Graph graph, int startID, int endID){
-        System.out.println("Not implemented yet!");
+    public static Route runDFS(Graph graph, int startID, int endID){
+        List<Node> exploredNodes = new ArrayList<>();
+        List<Node> neighbors = new ArrayList<>();
+        try {
+            Route startRoute = new Route(graph.getSingleNode(startID), graph.getSingleNode(endID), new ArrayList<>());
+            Node nodeToCheck = graph.getSingleNode(startID);
+            for (Path path: graph.getPaths()){
+                exploredNodes.add(nodeToCheck);
+                if (path.getStart().getId() == nodeToCheck.getId()){
+                    neighbors.add(path.getEnd());
+                    Route dummy = new Route(graph.getSingleNode(startID), path.getEnd(), new ArrayList<>(startRoute.getPaths()));
+                    dummy.addPathToRoute(path);
+                }
+            }
+            nodeToCheck = neighbors.remove(0);
+        } catch (NodeNotInGraphException e) {
+            e.printStackTrace();
+        } catch (PathCannotConnectToRouteException e) {
+            e.printStackTrace();
+        }
+
+
+        return null;
     }
 
     public static void runPrim(Graph graph){
@@ -222,16 +269,12 @@ public class Main {
                             // Check if there is a shortest way to go to that node(end)
                             if(route.getTotalWeight() > shortestRoute.getTotalWeight() + path.getWeight()){
                                 // Create a dummy route to store the route
-                                Route dummyRoute = new Route(shortestRoute.getStartPoint(), path.getEnd(), new ArrayList<>());
+                                Route dummyRoute = new Route(shortestRoute.getStartPoint(), shortestRoute.getEndPoint(), new ArrayList<>(shortestRoute.getPaths()));
                                 try {
-                                    for(Path p: shortestRoute.getPaths()){
-                                        dummyRoute.addPath(p);
-                                    }
-                                    dummyRoute.addPath(path);
+                                    dummyRoute.addPathToRoute(path);
                                 } catch (PathCannotConnectToRouteException e) {
                                     System.out.println(e.getMessage());
                                 }
-                                dummyRoute.calcTotalWeight();
                                 routes.set(routes.indexOf(route), dummyRoute);
                                 System.out.println("<<<New Route>>>");
                                 route.printRoute();

@@ -198,27 +198,50 @@ public class Main {
     }
 
     public static Route runDFS(Graph graph, int startID, int endID){
-        List<Node> exploredNodes = new ArrayList<>();
-        List<Node> neighbors = new ArrayList<>();
+        Deque<Node> nodesToCheck = new ArrayDeque<>();
+        List<Integer> exploredNodes = new ArrayList<>();
+        List<Route> routesCreated = new ArrayList<>();
+        List<Route> routesToAdd = new ArrayList<>();
         try {
-            Route startRoute = new Route(graph.getSingleNode(startID), graph.getSingleNode(endID), new ArrayList<>());
-            Node nodeToCheck = graph.getSingleNode(startID);
-            for (Path path: graph.getPaths()){
-                exploredNodes.add(nodeToCheck);
-                if (path.getStart().getId() == nodeToCheck.getId()){
-                    neighbors.add(path.getEnd());
-                    Route dummy = new Route(graph.getSingleNode(startID), path.getEnd(), new ArrayList<>(startRoute.getPaths()));
-                    dummy.addPathToRoute(path);
+            Route dummyRoute = new Route(graph.getSingleNode(startID), graph.getSingleNode(startID), new ArrayList<>());
+            routesCreated.add(dummyRoute);
+            nodesToCheck.push(graph.getSingleNode(startID));
+            while (!nodesToCheck.isEmpty()){
+                Node currentNode = nodesToCheck.pop();
+                System.out.print("\nCurrent: ");
+                System.out.print(currentNode.getId());
+                if (exploredNodes.contains(currentNode.getId())){
+                    System.out.print(" Explored!");
+                    continue;
+                }
+                exploredNodes.add(currentNode.getId());
+                for (Path path: graph.getPaths()){
+                    if (path.getStart().getId() == currentNode.getId()){
+                        for (Route route: routesCreated){
+                            if (route.getEndPoint().getId() == currentNode.getId()){
+                                Route routeCreated = new Route(route.getStartPoint(), route.getEndPoint(), new ArrayList<>(route.getPaths()));
+                                routeCreated.addPathToRoute(path);
+                                if (routeCreated.getEndPoint().getId() == endID){
+                                    return routeCreated;
+                                }
+                                routesToAdd.add(routeCreated);
+                            }
+                        }
+                        routesCreated.addAll(routesToAdd);
+                        routesToAdd.clear();
+                        nodesToCheck.push(path.getEnd());
+                        System.out.print("\nStack: ");
+                        for (Node n: nodesToCheck){
+                            System.out.print(" " + n.getId());
+                        }
+                    }
                 }
             }
-            nodeToCheck = neighbors.remove(0);
         } catch (NodeNotInGraphException e) {
             e.printStackTrace();
         } catch (PathCannotConnectToRouteException e) {
             e.printStackTrace();
         }
-
-
         return null;
     }
 
